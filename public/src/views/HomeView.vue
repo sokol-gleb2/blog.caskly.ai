@@ -1,76 +1,43 @@
 <script setup lang="ts">
-// Placeholder content until the API + database are wired.
-const posts = [
-  {
-    slug: 'reduce-waste-behind-the-bar',
-    title: 'How to cut waste behind the bar without slowing service',
-    excerpt:
-      'A practical playbook for British pubs: better prep discipline, smarter par levels, and a weekly cadence that sticks.',
-    date: 'Feb 2, 2026',
-    readTime: '7 min read',
-    category: 'Operations',
-    image: '/src/assets/home.jpg',
-  },
-  {
-    slug: 'rotas-that-staff-love',
-    title: 'Rotas that staff actually love (and that managers can maintain)',
-    excerpt:
-      'Build predictability for your team while staying flexible on busy match days with a few high-leverage rules.',
-    date: 'Jan 28, 2026',
-    readTime: '6 min read',
-    category: 'People',
-    image: '/src/assets/home.jpg',
-  },
-  {
-    slug: 'stock-counts-in-30-mins',
-    title: 'Stock counts in 30 minutes: the pub manager’s checklist',
-    excerpt:
-      'A tight, repeatable routine that keeps cellar numbers accurate without the usual end-of-week stress.',
-    date: 'Jan 23, 2026',
-    readTime: '5 min read',
-    category: 'Inventory',
-    image: '/src/assets/home.jpg',
-  },
-  {
-    slug: 'promotions-for-quiet-weeknights',
-    title: 'Promotions that lift quiet weeknights (without discount fatigue)',
-    excerpt:
-      'Create demand for Monday to Thursday with mini-events, low-cost bundles, and smart upsells.',
-    date: 'Jan 17, 2026',
-    readTime: '8 min read',
-    category: 'Marketing',
-    image: '/src/assets/home.jpg',
-  },
-  {
-    slug: 'aeo-ready-pub-answers',
-    title: 'AEO-ready answers your pub customers are already asking',
-    excerpt:
-      'A list of questions that win featured snippets and voice search, plus the structure to answer them clearly.',
-    date: 'Jan 11, 2026',
-    readTime: '6 min read',
-    category: 'SEO',
-    image: '/src/assets/home.jpg',
-  },
-  {
-    slug: 'matchday-operations',
-    title: 'Matchday operations: smoother service in the first 30 minutes',
-    excerpt:
-      'Prep the bar, the floor, and the team for a perfect kickoff surge—no chaos required.',
-    date: 'Jan 6, 2026',
-    readTime: '5 min read',
-    category: 'Service',
-    image: '/src/assets/home.jpg',
-  },
-]
+import { onMounted, ref } from 'vue';
 
-const topics = ['All', 'Operations', 'Inventory', 'People', 'Marketing', 'SEO', 'Service']
+const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
+
+type BlogPost = {
+  slug: string
+  title: string
+  image: string
+  category: string
+  date: string
+  excerpt: string
+  readTime: string
+};
+
+const posts = ref<BlogPost[]>([]);
+const topics = ref<string[]>([]);
+
+onMounted(async () => {
+  try {
+    const data = await fetch(`${apiBase}/blogs/`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+    posts.value = Array.isArray(data) ? data : [];
+    topics.value = [...new Set(posts.value.map(post => post.category))];
+    
+  } catch (error) {
+    posts.value = [];
+  }
+});
 </script>
 
 <template>
   <div class="home">
     <header class="site-header">
       <div class="brand">
-        <span class="brand-mark">C</span>
+        <img src="../assets/caskly-logo-100x100.png" alt="C" class="brand-mark">
         <div>
           <p class="brand-name">Caskly Blog</p>
           <p class="brand-tagline">Management insights for British pubs</p>
@@ -80,6 +47,7 @@ const topics = ['All', 'Operations', 'Inventory', 'People', 'Marketing', 'SEO', 
         <a class="nav-link is-active" href="#">Home</a>
         <a class="nav-link" href="#">Topics</a>
         <a class="nav-link" href="#">About</a>
+        <router-link class="nav-link" to="/upload">Upload</router-link>
       </nav>
     </header>
 
@@ -112,9 +80,10 @@ const topics = ['All', 'Operations', 'Inventory', 'People', 'Marketing', 'SEO', 
     <section class="topics">
       <p class="section-title">Browse by topic</p>
       <div class="topic-row">
-        <button v-for="topic in topics" :key="topic" class="topic-pill">
+        <button v-if="topics.length > 0" v-for="topic in topics" :key="topic" class="topic-pill">
           {{ topic }}
         </button>
+        <h3 v-else>No topics to browse</h3>
       </div>
     </section>
 
@@ -124,7 +93,7 @@ const topics = ['All', 'Operations', 'Inventory', 'People', 'Marketing', 'SEO', 
         <p>Focused, specific playbooks you can use on your next shift.</p>
       </div>
       <div class="post-grid">
-        <article v-for="post in posts" :key="post.slug" class="post-card">
+        <article v-if="posts.length > 0" v-for="post in posts" :key="post.slug" class="post-card">
           <div class="post-image">
             <img :src="post.image" :alt="post.title" class="post-img" loading="lazy" />
           </div>
@@ -139,6 +108,7 @@ const topics = ['All', 'Operations', 'Inventory', 'People', 'Marketing', 'SEO', 
             <a class="post-link" href="#">Read post</a>
           </div>
         </article>
+        <h3 v-else>No posts yet. Check in later.</h3>
       </div>
     </section>
 
@@ -191,25 +161,19 @@ const topics = ['All', 'Operations', 'Inventory', 'People', 'Marketing', 'SEO', 
 .brand {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 4px;
 }
 
 .brand-mark {
-  width: 44px;
-  height: 44px;
+  width: 55px;
+  height: 55px;
   border-radius: 12px;
-  background: var(--accent);
-  color: #fff;
-  display: grid;
-  place-items: center;
-  font-weight: 700;
-  font-family: 'Clash Display', sans-serif;
 }
 
 .brand-name {
   margin: 0;
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 1.5rem;
   font-family: 'Clash Display', sans-serif;
 }
 
@@ -217,13 +181,14 @@ const topics = ['All', 'Operations', 'Inventory', 'People', 'Marketing', 'SEO', 
   margin: 2px 0 0;
   color: var(--ink);
   opacity: 0.7;
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
 .nav {
   display: flex;
   gap: 20px;
-  font-size: 0.95rem;
+  font-size: 1.2rem;
+  font-weight: bold;
 }
 
 .nav-link {
