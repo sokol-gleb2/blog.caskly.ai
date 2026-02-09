@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS app.blogs (
   title TEXT NOT NULL,
   subtitle TEXT,
   excerpt TEXT,
+  category TEXT,
   content_md TEXT,
   content_html TEXT,
   cover_image_url TEXT,

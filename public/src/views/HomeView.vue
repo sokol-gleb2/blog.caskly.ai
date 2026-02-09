@@ -1,31 +1,53 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
 
 type BlogPost = {
   slug: string
   title: string
-  image: string
-  category: string
-  date: string
-  excerpt: string
-  readTime: string
+  cover_image_url: string | null
+  excerpt: string | null
+  reading_time_minutes: number | null
+  published_at: string | null
+  created_at: string,
+  category?: string | null
 };
 
 const posts = ref<BlogPost[]>([]);
 const topics = ref<string[]>([]);
+const featuredPost = computed(() => (posts.value.length ? posts.value[0] : null));
+const router = useRouter();
+
+const formatDate = (value: string | null) => {
+  if (!value) return '';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString();
+};
+
+const goToPost = (slug: string) => {
+  router.push(`/posts/${slug}`);
+};
 
 onMounted(async () => {
   try {
-    const data = await fetch(`${apiBase}/blogs/`, {
+    fetch(`${apiBase}/blogs/`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json"
       }
-    });
-    posts.value = Array.isArray(data) ? data : [];
-    topics.value = [...new Set(posts.value.map(post => post.category))];
+    })
+      .then(response => response.json())
+      .then(data => {
+        posts.value = Array.isArray(data.items) ? data.items : [];
+        console.log(data.items);
+        
+        const categories = posts.value
+          .map((post) => post.category)
+          .filter((value): value is string => Boolean(value));
+        topics.value = [...new Set(categories)];
+      })
     
   } catch (error) {
     posts.value = [];
@@ -63,17 +85,24 @@ onMounted(async () => {
           <a class="button ghost" href="#subscribe">Get the weekly digest</a>
         </div>
       </div>
-      <div class="hero-card">
+      <div class="hero-card" v-if="featuredPost" role="button" tabindex="0" @click="goToPost(featuredPost.slug)">
         <p class="hero-card-label" style="color: var(--accent);">Featured this week</p>
-        <h3>Rotas that staff actually love (and that managers can maintain)</h3>
-        <p>
-          Predictable shifts, fewer swaps, and a framework that keeps the team happy without sacrificing
-          busy-night coverage.
+        <h3>{{ featuredPost.title }}</h3>
+        <p v-if="featuredPost.excerpt">
+          {{ featuredPost.excerpt }}
         </p>
+        <p v-else>Check back soon for the latest insights.</p>
         <div class="meta-row">
-          <span>People</span>
-          <span>6 min read</span>
+          <span v-if="formatDate(featuredPost.published_at || featuredPost.created_at)">
+            {{ formatDate(featuredPost.published_at || featuredPost.created_at) }}
+          </span>
+          <span v-if="featuredPost.reading_time_minutes">{{ featuredPost.reading_time_minutes }} min read</span>
         </div>
+      </div>
+      <div class="hero-card" v-else>
+        <p class="hero-card-label" style="color: var(--accent);">Featured this week</p>
+        <h3>No featured post yet</h3>
+        <p>Check back soon for the latest insights.</p>
       </div>
     </section>
 
@@ -93,19 +122,27 @@ onMounted(async () => {
         <p>Focused, specific playbooks you can use on your next shift.</p>
       </div>
       <div class="post-grid">
-        <article v-if="posts.length > 0" v-for="post in posts" :key="post.slug" class="post-card">
-          <div class="post-image">
-            <img :src="post.image" :alt="post.title" class="post-img" loading="lazy" />
+        <article
+          v-if="posts.length > 0"
+          v-for="post in posts"
+          :key="post.slug"
+          class="post-card"
+          role="button"
+          tabindex="0"
+          @click="goToPost(post.slug)"
+        >
+          <div class="post-image" v-if="post.cover_image_url">
+            <img :src="post.cover_image_url" :alt="post.title" class="post-img" loading="lazy" />
           </div>
           <div class="post-meta">
             <span class="post-category">{{ post.category }}</span>
-            <span>{{ post.date }}</span>
+            <span>{{ post.created_at }}</span>
           </div>
           <h3>{{ post.title }}</h3>
           <p class="post-excerpt">{{ post.excerpt }}</p>
           <div class="post-footer">
-            <span>{{ post.readTime }}</span>
-            <a class="post-link" href="#">Read post</a>
+            <span>{{ post.reading_time_minutes }}</span>
+            <router-link class="post-link" :to="`/posts/${post.slug}`">Read post</router-link>
           </div>
         </article>
         <h3 v-else>No posts yet. Check in later.</h3>
@@ -349,9 +386,10 @@ onMounted(async () => {
 }
 
 .post-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  display: flex;
   gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .post-card {
@@ -364,6 +402,7 @@ onMounted(async () => {
   flex-direction: column;
   gap: 12px;
   transition: transform 0.2s ease, border-color 0.2s ease;
+  max-width: calc(33% - 44px);
 }
 
 .post-card:hover {

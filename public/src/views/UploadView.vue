@@ -252,7 +252,21 @@ const submit = async () => {
         </label>
         <label>
           FAQ JSON (optional)
-          <textarea v-model="form.faq_json" rows="4" placeholder='[{"question":"...","answer":"..."}]' />
+          <textarea v-model="form.faq_json" rows="4" 
+            placeholder='{
+              "@type": "FAQPage",
+              "mainEntity": [
+                {
+                  "@type": "Question",
+                  "name": "...",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "..."
+                  }
+                }
+              ]
+            }' 
+          />
         </label>
         <label>
           Schema JSON (optional)

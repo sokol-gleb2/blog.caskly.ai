@@ -9,6 +9,7 @@ const outlineFields = `
   title,
   subtitle,
   excerpt,
+  category,
   cover_image_url,
   cover_image_alt,
   reading_time_minutes,
@@ -86,6 +87,12 @@ router.get('/:slug', async (req, res) => {
   }
 });
 
+const toJsonb = (value) => {
+  if (value === null || value === undefined || value === '') return null
+  if (typeof value === 'string') return JSON.stringify(JSON.parse(value))
+  return JSON.stringify(value)
+}
+
 router.post('/', async (req, res) => {
   try {
     const expectedPassword = process.env.UPLOAD_PASSWORD || '';
@@ -120,10 +127,11 @@ router.post('/', async (req, res) => {
       faq_json,
       schema_json,
     } = req.body;
+    
 
     const result = await query(
       `
-        INSERT INTO blogs (
+        INSERT INTO app.blogs (
           slug, title, subtitle, excerpt, content_md, content_html, cover_image_url,
           cover_image_alt, status, reading_time_minutes, published_at,
           focus_phrase, keywords, meta_title, meta_description, canonical_url,
@@ -162,8 +170,8 @@ router.post('/', async (req, res) => {
         twitter_title,
         twitter_description,
         twitter_image_url,
-        faq_json,
-        schema_json,
+        toJsonb(faq_json),
+        toJsonb(schema_json),
       ],
     );
 
@@ -219,7 +227,7 @@ router.put('/:id', async (req, res) => {
 
     values.push(id);
     const sql = `
-      UPDATE blogs
+      UPDATE app.blogs
       SET ${setClauses.join(', ')}, updated_at = NOW()
       WHERE id = $${values.length}
       RETURNING *
