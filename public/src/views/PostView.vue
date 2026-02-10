@@ -37,7 +37,9 @@
     const route = useRoute();
     const slug = route.params.slug as string;
 
-    fetch(`/api/blogs/${slug}`)
+    const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000';
+
+    fetch(`${API_BASE}/blogs/${slug}`)
         .then(res => res.json())
         .then(data => {
             postDetails.value = data.item;

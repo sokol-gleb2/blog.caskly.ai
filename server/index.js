@@ -1,27 +1,27 @@
-console.log('SERVER HIT', new Date().toISOString());
-
 import 'dotenv/config';
 import express from 'express';
+import cors from 'cors';
 import blogsRouter from './routes/blogs.js';
 
 const app = express();
 
 app.use(express.json({ limit: '2mb' }));
 
-// Only enable CORS locally
-if (process.env.NODE_ENV !== 'production') {
-    app.use((req, res, next) => {
-        res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
-        res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-        if (req.method === 'OPTIONS') {
-            return res.sendStatus(204);
-        }
-        next();
-    });
-}
+app.use(cors({
+    origin: "https://blogcasklyai.vercel.app",
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: false
+}));
+
+// Explicit preflight handling (important for Vercel)
+// app.options("*", cors());
 
 app.use('/blogs', blogsRouter);
+
+app.get('/health', (req, res) => {
+    res.json({ ok: true });
+});
 
 // Local dev only
 if (process.env.NODE_ENV !== 'production') {
@@ -31,5 +31,4 @@ if (process.env.NODE_ENV !== 'production') {
     });
 }
 
-// ALWAYS export app for Vercel
 export default app;

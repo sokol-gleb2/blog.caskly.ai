@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000';
+
 const form = reactive({
   slug: '',
   title: '',
@@ -131,7 +133,7 @@ const submit = async () => {
       submitError.value = 'Invalid JSON in FAQ or Schema fields.'
       return
     }
-    const res = await fetch(`/api/blogs`, {
+    const res = await fetch(`${API_BASE}/blogs`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),

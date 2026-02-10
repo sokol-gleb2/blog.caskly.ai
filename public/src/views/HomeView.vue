@@ -28,9 +28,12 @@ const goToPost = (slug: string) => {
   router.push(`/posts/${slug}`);
 };
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000';
+
+
 onMounted(async () => {
   try {
-    fetch(`/api/blogs`, {
+    fetch(`${API_BASE}/blogs`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json"
