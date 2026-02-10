@@ -2,8 +2,6 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
-const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
-
 type BlogPost = {
   slug: string
   title: string
@@ -32,7 +30,7 @@ const goToPost = (slug: string) => {
 
 onMounted(async () => {
   try {
-    fetch(`${apiBase}/blogs/`, {
+    fetch(`/api/blogs/`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json"

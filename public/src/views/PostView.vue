@@ -2,8 +2,6 @@
     import { computed, onBeforeUnmount, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
 
-    const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
-
     type Post = {
         id: string,
         slug: string,
@@ -39,7 +37,7 @@
     const route = useRoute();
     const slug = route.params.slug as string;
 
-    fetch(`${apiBase}/blogs/${slug}`)
+    fetch(`/api/blogs/${slug}`)
         .then(res => res.json())
         .then(data => {
             postDetails.value = data.item;
