@@ -1,3 +1,5 @@
+console.log('SERVER HIT', new Date().toISOString());
+
 import 'dotenv/config';
 import express from 'express';
 import blogsRouter from './routes/blogs.js';

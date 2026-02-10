@@ -30,7 +30,7 @@ const goToPost = (slug: string) => {
 
 onMounted(async () => {
   try {
-    fetch(`/api/blogs/`, {
+    fetch(`/api/blogs`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json"
