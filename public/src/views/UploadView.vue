@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000';
 
@@ -8,6 +8,7 @@ const form = reactive({
   title: '',
   subtitle: '',
   excerpt: '',
+  category: '',
   content_md: '',
   cover_image_url: '',
   cover_image_alt: '',
@@ -33,6 +34,9 @@ const form = reactive({
 const isSubmitting = ref(false)
 const submitMessage = ref('')
 const submitError = ref('')
+const categories = ref<string[]>([])
+const categoriesError = ref('')
+const isLoadingCategories = ref(false)
 
 const slugify = (value: string) =>
   value
@@ -91,6 +95,7 @@ const buildPayload = () => {
     title: form.title,
     subtitle: form.subtitle || null,
     excerpt: form.excerpt || null,
+    category: form.category || null,
     content_md: form.content_md || null,
     content_html: previewHtml.value || null,
     cover_image_url: form.cover_image_url || null,
@@ -114,6 +119,29 @@ const buildPayload = () => {
     upload_password: form.upload_password,
   }
 }
+
+const loadCategories = async () => {
+  isLoadingCategories.value = true
+  categoriesError.value = ''
+  try {
+    const res = await fetch(`${API_BASE}/blogs/categories`)
+    if (!res.ok) throw new Error('Failed to load categories')
+    const data = await res.json().catch(() => ({}))
+    categories.value = Array.isArray(data.items) ? data.items.filter(Boolean) : []
+  } catch (err) {
+    categoriesError.value = err instanceof Error ? err.message : 'Failed to load categories'
+  } finally {
+    isLoadingCategories.value = false
+  }
+}
+
+const selectCategory = (value: string) => {
+  form.category = value
+}
+
+onMounted(() => {
+  loadCategories()
+})
 
 const submit = async () => {
   submitMessage.value = ''
@@ -190,6 +218,32 @@ const submit = async () => {
           Excerpt
           <textarea v-model="form.excerpt" rows="3" placeholder="Short summary used in lists." />
         </label>
+        <label>
+          Category
+          <input v-model="form.category" type="text" placeholder="Operations" />
+        </label>
+        <div class="category-picker">
+          <div class="category-header">
+            <span>Existing categories</span>
+            <button class="ghost small" type="button" @click="loadCategories" :disabled="isLoadingCategories">
+              {{ isLoadingCategories ? 'Loading…' : 'Refresh' }}
+            </button>
+          </div>
+          <div class="category-chips" v-if="categories.length">
+            <button
+              v-for="category in categories"
+              :key="category"
+              type="button"
+              class="chip"
+              :class="{ active: category === form.category }"
+              @click="selectCategory(category)"
+            >
+              {{ category }}
+            </button>
+          </div>
+          <p v-else-if="categoriesError" class="helper error">{{ categoriesError }}</p>
+          <p v-else class="helper">No categories yet. Submit a post to start the list.</p>
+        </div>
       </section>
 
       <section class="panel">
@@ -407,6 +461,11 @@ const submit = async () => {
   font-weight: 600;
 }
 
+.ghost.small {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+}
+
 .status-pill {
   padding: 6px 12px;
   border-radius: 999px;
@@ -517,6 +576,57 @@ select {
 .image-preview img {
   width: 100%;
   display: block;
+}
+
+.category-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px dashed rgba(0, 0, 0, 0.2);
+  background: #fff9ef;
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.category-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: #ffffff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.chip.active {
+  border-color: #ff6b3d;
+  background: rgba(255, 107, 61, 0.15);
+  font-weight: 600;
+}
+
+.helper {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+
+.helper.error {
+  color: #b11212;
+  opacity: 1;
 }
 
 .submit {

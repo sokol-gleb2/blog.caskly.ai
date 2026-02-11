@@ -8,7 +8,7 @@ const app = express();
 app.use(express.json({ limit: '2mb' }));
 
 app.use(cors({
-    origin: "https://blogcasklyai.vercel.app",
+    origin: "https://blog.caskly.ai",
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: false

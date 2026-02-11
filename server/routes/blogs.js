@@ -66,6 +66,24 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.get('/categories', async (_req, res) => {
+  try {
+    const result = await query(
+      `
+        SELECT DISTINCT category
+        FROM app.blogs
+        WHERE category IS NOT NULL AND category <> ''
+        ORDER BY category ASC
+      `,
+    );
+
+    res.json({ items: result.rows.map((row) => row.category) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch categories' });
+  }
+});
+
 // when you know the slug e.g. /blogs/my-post-slug
 // used when fetching a particular blog post
 router.get('/:slug', async (req, res) => {
@@ -106,6 +124,7 @@ router.post('/', async (req, res) => {
       title,
       subtitle,
       excerpt,
+      category,
       content_md,
       content_html,
       cover_image_url,
@@ -132,7 +151,7 @@ router.post('/', async (req, res) => {
     const result = await query(
       `
         INSERT INTO app.blogs (
-          slug, title, subtitle, excerpt, content_md, content_html, cover_image_url,
+          slug, title, subtitle, excerpt, category, content_md, content_html, cover_image_url,
           cover_image_alt, status, reading_time_minutes, published_at,
           focus_phrase, keywords, meta_title, meta_description, canonical_url,
           og_title, og_description, og_image_url, twitter_title, twitter_description,
@@ -143,7 +162,7 @@ router.post('/', async (req, res) => {
           $8,$9,$10,$11,$12,$13,
           $14,$15,$16,$17,$18,
           $19,$20,$21,$22,$23,
-          $24
+          $24,$25
         )
         RETURNING *
       `,
@@ -152,6 +171,7 @@ router.post('/', async (req, res) => {
         title,
         subtitle,
         excerpt,
+        category,
         content_md,
         content_html,
         cover_image_url,
@@ -190,6 +210,7 @@ router.put('/:id', async (req, res) => {
       title: req.body.title,
       subtitle: req.body.subtitle,
       excerpt: req.body.excerpt,
+      category: req.body.category,
       content_md: req.body.content_md,
       content_html: req.body.content_html,
       cover_image_url: req.body.cover_image_url,
