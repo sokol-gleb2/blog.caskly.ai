@@ -10,17 +10,20 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: HomeView,
+      meta: {title: "Learn more about running a pub | Caskly Blog"}
     },
     {
       path: '/upload',
       name: 'upload',
       component: UploadView,
+      meta: {title: "Caskly Blog Upload | Authorised Only"}
     },
     {
       path: '/posts/:slug',
       name: 'post',
       component: PostView,
       props: true,
+      meta: {title: "Learn more about running a pub | Caskly Blog"}
     },
   ],
 })

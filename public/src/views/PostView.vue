@@ -43,6 +43,7 @@
         .then(res => res.json())
         .then(data => {
             postDetails.value = data.item;
+            document.title = data.item.meta_title || data.item.title;
         })
 
     const pageTitle = computed(() => {
