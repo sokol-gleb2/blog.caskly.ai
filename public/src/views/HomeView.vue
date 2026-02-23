@@ -403,6 +403,7 @@ onMounted(async () => {
   flex-direction: column;
   gap: 12px;
   transition: transform 0.2s ease, border-color 0.2s ease;
+  min-width: 350px;
   max-width: calc(33% - 44px);
 }
 

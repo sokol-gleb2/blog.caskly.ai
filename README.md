@@ -13,3 +13,5 @@ Notes:
 - This project currently uses a single `blogs` table. It can live in `app.blogs`.
 - Keep `public` empty of app tables; reserve it for extensions (for example `pg_trgm`).
 - You can set `search_path` to `app, public` to avoid schema prefixes in queries.
+
+`vercel --prod`
