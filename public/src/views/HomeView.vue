@@ -42,8 +42,7 @@ onMounted(async () => {
       .then(response => response.json())
       .then(data => {
         posts.value = Array.isArray(data.items) ? data.items : [];
-        console.log(data.items);
-        
+
         const categories = posts.value
           .map((post) => post.category)
           .filter((value): value is string => Boolean(value));
@@ -61,7 +60,7 @@ onMounted(async () => {
     <header class="site-header">
       <div class="brand">
         <img src="../assets/caskly-logo-100x100.png" alt="C" class="brand-mark">
-        <div>
+        <div class="brand-copy">
           <p class="brand-name">Caskly Blog</p>
           <p class="brand-tagline">Management insights for British pubs</p>
         </div>
@@ -137,12 +136,13 @@ onMounted(async () => {
           </div>
           <div class="post-meta">
             <span class="post-category">{{ post.category }}</span>
-            <span>{{ post.created_at }}</span>
+            <span>{{ formatDate(post.published_at || post.created_at) }}</span>
           </div>
           <h3>{{ post.title }}</h3>
           <p class="post-excerpt">{{ post.excerpt }}</p>
           <div class="post-footer">
-            <span>{{ post.reading_time_minutes }}</span>
+            <span v-if="post.reading_time_minutes">{{ post.reading_time_minutes }} min read</span>
+            <span v-else>Quick read</span>
             <router-link class="post-link" :to="`/posts/${post.slug}`">Read post</router-link>
           </div>
         </article>
@@ -175,22 +175,26 @@ onMounted(async () => {
 <style scoped>
 /* Layout */
 .home {
-  padding: 48px 72px 64px;
+  width: min(1240px, 100%);
+  margin: 0 auto;
+  padding: 36px clamp(16px, 5vw, 72px) 64px;
   display: flex;
   flex-direction: column;
-  gap: 56px;
+  gap: 48px;
+  overflow-x: hidden;
 }
 
 .site-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  position: absolute;
-  width: calc(100% - 160px);
-  left: 80px;
-  top: 55px;
-  padding: 10px;
+  position: sticky;
+  top: 12px;
+  z-index: 20;
+  width: 100%;
+  padding: 12px 16px;
   border-radius: 24px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
   background-color: rgba(255, 255, 255, 0.4);
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
@@ -199,7 +203,12 @@ onMounted(async () => {
 .brand {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 10px;
+  min-width: 0;
+}
+
+.brand-copy {
+  min-width: 0;
 }
 
 .brand-mark {
@@ -212,6 +221,8 @@ onMounted(async () => {
   margin: 0;
   font-weight: 600;
   font-size: 1.5rem;
+  line-height: 1.05;
+  white-space: nowrap;
   font-family: 'Clash Display', sans-serif;
 }
 
@@ -219,12 +230,15 @@ onMounted(async () => {
   margin: 2px 0 0;
   color: var(--ink);
   opacity: 0.7;
-  font-size: 1rem;
+  font-size: 0.95rem;
+  line-height: 1.3;
 }
 
 .nav {
   display: flex;
-  gap: 20px;
+  justify-content: flex-end;
+  gap: 18px;
+  flex-wrap: wrap;
   font-size: 1.2rem;
   font-weight: bold;
 }
@@ -233,6 +247,7 @@ onMounted(async () => {
   padding: 6px 0;
   color: var(--ink);
   opacity: 0.7;
+  white-space: nowrap;
 }
 
 .nav-link.is-active {
@@ -246,7 +261,7 @@ onMounted(async () => {
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
   gap: 36px;
   align-items: center;
-  height: calc(100vh - 90px);
+  min-height: 620px;
   padding: 48px;
   border-radius: 28px;
   background:
@@ -281,9 +296,13 @@ onMounted(async () => {
 .hero-actions {
   display: flex;
   gap: 16px;
+  flex-wrap: wrap;
 }
 
 .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 12px 20px;
   border-radius: 999px;
   background: var(--accent);
@@ -332,6 +351,8 @@ onMounted(async () => {
 .meta-row {
   display: flex;
   justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
   color: var(--ink);
   opacity: 0.7;
   font-size: 0.9rem;
@@ -387,10 +408,9 @@ onMounted(async () => {
 }
 
 .post-grid {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
-  flex-wrap: wrap;
-  justify-content: center;
 }
 
 .post-card {
@@ -403,8 +423,8 @@ onMounted(async () => {
   flex-direction: column;
   gap: 12px;
   transition: transform 0.2s ease, border-color 0.2s ease;
-  min-width: 350px;
-  max-width: calc(33% - 44px);
+  min-width: 0;
+  width: 100%;
 }
 
 .post-card:hover {
@@ -415,6 +435,8 @@ onMounted(async () => {
 .post-meta {
   display: flex;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
   font-size: 0.8rem;
   color: var(--ink);
   opacity: 0.7;
@@ -429,6 +451,7 @@ onMounted(async () => {
   margin: 0;
   font-family: 'Clash Display', sans-serif;
   font-size: 1.25rem;
+  line-height: 1.2;
 }
 
 .post-excerpt {
@@ -475,6 +498,7 @@ onMounted(async () => {
 
 .subscribe-form input {
   flex: 1;
+  min-width: 0;
   padding: 12px 16px;
   border-radius: 12px;
   border: 1px solid var(--line);
@@ -506,18 +530,36 @@ onMounted(async () => {
 
 @media (max-width: 960px) {
   .home {
-    padding: 32px 24px 48px;
+    padding: 28px 20px 44px;
+    gap: 36px;
   }
 
   .site-header {
-    position: relative;
     flex-direction: column;
     align-items: flex-start;
+    gap: 14px;
+  }
+
+  .nav {
+    width: 100%;
+    justify-content: flex-start;
     gap: 16px;
+    font-size: 1.05rem;
   }
 
   .hero {
     grid-template-columns: 1fr;
+    min-height: auto;
+    padding: 30px;
+    gap: 28px;
+  }
+
+  .hero-copy h1 {
+    font-size: 2.15rem;
+  }
+
+  .post-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .subscribe {
@@ -532,6 +574,100 @@ onMounted(async () => {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+  }
+}
+
+@media (max-width: 680px) {
+  .home {
+    padding: 18px 14px 34px;
+    gap: 28px;
+  }
+
+  .site-header {
+    border-radius: 18px;
+    padding: 12px;
+    top: 8px;
+  }
+
+  .brand {
+    align-items: flex-start;
+  }
+
+  .brand-mark {
+    width: 44px;
+    height: 44px;
+  }
+
+  .brand-name {
+    font-size: 1.35rem;
+  }
+
+  .brand-tagline {
+    font-size: 0.95rem;
+    max-width: 21ch;
+  }
+
+  .nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    font-size: 1rem;
+    gap: 14px;
+    padding-bottom: 2px;
+  }
+
+  .nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hero {
+    padding: 20px;
+    border-radius: 22px;
+    gap: 24px;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(2rem, 9vw, 2.6rem);
+    margin-top: 0;
+  }
+
+  .hero-copy p {
+    margin-bottom: 20px;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .button {
+    width: 100%;
+  }
+
+  .hero-card {
+    padding: 20px;
+  }
+
+  .section-head h2 {
+    font-size: 1.6rem;
+  }
+
+  .post-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .post-card {
+    padding: 18px;
+  }
+
+  .subscribe {
+    padding: 22px 16px;
+  }
+
+  .subscribe h2 {
+    font-size: 1.45rem;
   }
 }
 
