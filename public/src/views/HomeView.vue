@@ -15,7 +15,13 @@ type BlogPost = {
 
 const posts = ref<BlogPost[]>([]);
 const topics = ref<string[]>([]);
+const topicsSection = ref<HTMLElement | null>(null);
+const activeTopic = ref<string | null>(null);
 const featuredPost = computed(() => (posts.value.length ? posts.value[0] : null));
+const visiblePosts = computed(() => {
+  if (!activeTopic.value) return posts.value;
+  return posts.value.filter((post) => post.category === activeTopic.value);
+});
 const router = useRouter();
 
 const formatDate = (value: string | null) => {
@@ -26,6 +32,14 @@ const formatDate = (value: string | null) => {
 
 const goToPost = (slug: string) => {
   router.push(`/posts/${slug}`);
+};
+
+const scrollToTopics = () => {
+  topicsSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+const toggleTopicFilter = (topic: string) => {
+  activeTopic.value = activeTopic.value === topic ? null : topic;
 };
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000';
@@ -67,8 +81,8 @@ onMounted(async () => {
       </div>
       <nav class="nav">
         <a class="nav-link is-active" href="#">Home</a>
-        <a class="nav-link" href="#">Topics</a>
-        <a class="nav-link" href="#">About</a>
+        <a class="nav-link" href="#topics" @click.prevent="scrollToTopics">Topics</a>
+        <a class="nav-link" href="https://caskly.ai/about" target="_blank" rel="noreferrer">About</a>
         <router-link class="nav-link" to="/upload">Upload</router-link>
       </nav>
     </header>
@@ -106,10 +120,18 @@ onMounted(async () => {
       </div>
     </section>
 
-    <section class="topics">
+    <section id="topics" ref="topicsSection" class="topics">
       <p class="section-title">Browse by topic</p>
       <div class="topic-row">
-        <button v-if="topics.length > 0" v-for="topic in topics" :key="topic" class="topic-pill">
+        <button
+          v-if="topics.length > 0"
+          v-for="topic in topics"
+          :key="topic"
+          class="topic-pill"
+          :class="{ 'is-active': activeTopic === topic }"
+          type="button"
+          @click="toggleTopicFilter(topic)"
+        >
           {{ topic }}
         </button>
         <h3 v-else>No topics to browse</h3>
@@ -123,8 +145,8 @@ onMounted(async () => {
       </div>
       <div class="post-grid">
         <article
-          v-if="posts.length > 0"
-          v-for="post in posts"
+          v-if="visiblePosts.length > 0"
+          v-for="post in visiblePosts"
           :key="post.slug"
           class="post-card"
           role="button"
@@ -146,7 +168,7 @@ onMounted(async () => {
             <router-link class="post-link" :to="`/posts/${post.slug}`">Read post</router-link>
           </div>
         </article>
-        <h3 v-else>No posts yet. Check in later.</h3>
+        <h3 v-else>No posts found for this topic.</h3>
       </div>
     </section>
 
@@ -362,6 +384,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  scroll-margin-top: 108px;
 }
 
 .section-title {
@@ -386,6 +409,13 @@ onMounted(async () => {
   background: var(--paper);
   font-size: 0.85rem;
   color: var(--ink);
+  cursor: pointer;
+}
+
+.topic-pill.is-active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
 }
 
 .latest {

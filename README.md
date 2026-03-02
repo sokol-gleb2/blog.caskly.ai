@@ -14,4 +14,5 @@ Notes:
 - Keep `public` empty of app tables; reserve it for extensions (for example `pg_trgm`).
 - You can set `search_path` to `app, public` to avoid schema prefixes in queries.
 
+`npm run build`
 `vercel --prod`
